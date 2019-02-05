@@ -9,9 +9,11 @@ import static java.awt.event.KeyEvent.*;
 
 public class Main extends GridPanel {
 
+    private static boolean centerAllowed = true;
     private Vector<Cell> points = new Vector<>();
     private Vector<Polygon> polygons = new Vector<>();
     private boolean centered = false;
+    private int selectedID = 0;
 
     protected Main(int N, double w, double h) {
         super(N, w, h);
@@ -23,12 +25,47 @@ public class Main extends GridPanel {
         f.setResizable(false);
         f.add(m);
         m.noGridLines();
+        centerAllowed = false;
+        if (!centerAllowed) {
+            m.setCenter(0, 0);
+            m.clearGrid();
+        }
+        // instructions
+        System.out.println("==============================instructions=============================");
+        System.out.println("press SPACE to connect first and last points of the polygon and save it");
+        System.out.println("press SHIFT to save to polygon without connecting first and last points");
+        System.out.println("press C to clear the grid");
+        System.out.println("press N to select next polygon");
+        System.out.println("press P to select prev polygon");
+        System.out.println("press R to rotate the selected polygon counter clockwise");
+        System.out.println("press T to rotate the selected polygon clockwise");
+        System.out.println("press I to scale up the selected polygon in Y direction");
+        System.out.println("press K to scale down the selected polygon in Y direction");
+        System.out.println("press L to scale up the selected polygon in X direction");
+        System.out.println("press J to scale down the selected polygon in X direction");
+        System.out.println("press arrow keys to move the selected polygon");
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D graphics2D = (Graphics2D) g;
+        for (Polygon polygon : polygons) {
+            for (Cell polygonVertex : polygon.getPolygonVertices()) {
+                graphics2D.setColor(polygonVertex.getColor());
+                graphics2D.fill(polygonVertex);
+                if (gridLines) {
+                    graphics2D.setColor(Color.BLACK);
+                    graphics2D.draw(polygonVertex);
+                }
+            }
+        }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         super.mousePressed(e);
-        if (!centered) {
+        if (centerAllowed && !centered) {
             setCenter(getClickedI(), getClickedJ());
             centered = !centered;
         } else {
@@ -44,6 +81,107 @@ public class Main extends GridPanel {
         }
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        super.keyPressed(e);
+        int x = getCenterX(), y = getCenterY();
+        switch (e.getKeyCode()) {
+            case VK_SPACE:
+                if (points.size() > 2) {
+                    drawLine(points.lastElement(), points.firstElement());
+                    createPolygon(true);
+                }
+                break;
+            case VK_SHIFT:
+                createPolygon(false);
+                break;
+            case VK_C:
+                clearGrid();
+                break;
+            case VK_R:
+                // rotate clockwise
+                rotatePolygon(true);
+                break;
+            case VK_T:
+                // rotate counter clockwise
+                rotatePolygon(false);
+                break;
+            case VK_I:
+                // scalePolygon up Y
+                scalePolygon(0, 1);
+                break;
+            case VK_K:
+                // scalePolygon down Y
+                scalePolygon(0, -1);
+                break;
+            case VK_L:
+                // scalePolygon up X
+                scalePolygon(1, 0);
+                break;
+            case VK_J:
+                // scalePolygon down X
+                scalePolygon(-1, 0);
+                break;
+            case VK_LEFT:
+                movePolygon(-1, 0);
+                break;
+            case VK_RIGHT:
+                movePolygon(1, 0);
+                break;
+            case VK_UP:
+                movePolygon(0, 1);
+                break;
+            case VK_DOWN:
+                movePolygon(0, -1);
+                break;
+            case VK_N:
+                selectPolygon(true);
+                break;
+            case VK_P:
+                selectPolygon(false);
+                break;
+        }
+        // update grid
+        super.clearGrid();
+        if (centerAllowed) setCenter(x, y);
+        for (Polygon polygon : polygons) {
+            drawPolygon(polygon);
+        }
+    }
+
+    private void rotatePolygon(boolean b) {
+        for (Polygon polygon : polygons) {
+            if (polygon.isSelected()) {
+                polygon.rotate(b);
+            }
+        }
+    }
+
+    private void scalePolygon(int x, int y) {
+        for (Polygon polygon : polygons) {
+            if (polygon.isSelected()) {
+                polygon.scale(x, y, 0.25);
+            }
+        }
+    }
+
+    private void movePolygon(int x, int y) {
+        for (Polygon polygon : polygons) {
+            if (polygon.isSelected()) {
+                polygon.move(x, y);
+            }
+        }
+    }
+
+    private void drawPolygon(Polygon polygon) {
+        Vector<Cell> vertices = polygon.getPolygonVertices();
+        drawPolygon(vertices);
+        if (polygon.isComplete()) {
+            drawLine(vertices.firstElement(), vertices.lastElement());
+        }
+        plot(polygon.getMassX(), polygon.getMassY());
+    }
+
     private void drawPolygon(Vector<Cell> points) {
         if (points.size() >= 2) {
             for (int i = 0; i < points.size() - 1; i++) {
@@ -54,28 +192,35 @@ public class Main extends GridPanel {
         }
     }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        super.keyPressed(e);
-        switch (e.getKeyCode()) {
-            case VK_SPACE:
-                if (points.size() > 2) {
-                    drawLine(points.lastElement(), points.firstElement());
-                    polygons.add(new Polygon(points));
-                    points.clear();
+    private void selectPolygon(boolean next) {
+        if (polygons.size() > 1) {
+            if (next)
+                selectedID++;
+            else
+                selectedID--;
+            selectedID += polygons.size();
+            selectedID %= polygons.size();
+
+            for (Polygon polygon : polygons) {
+                polygon.setSelected(false);
+                for (Cell polygonVertex : polygon.getPolygonVertices()) {
+                    polygonVertex.setColor(Color.RED);
                 }
-                break;
-            case VK_C:
-                clearGrid();
-                break;
-            case VK_ENTER:
-                fill();
-                break;
+            }
+            polygons.get(selectedID).select();
         }
     }
 
-    private void fill() {
-
+    private void createPolygon(boolean complete) {
+        Polygon e1 = new Polygon(new Vector<>(points));
+        for (Polygon polygon : polygons) {
+            polygon.setSelected(false);
+        }
+        e1.select();
+        e1.setComplete(complete);
+        selectedID++;
+        polygons.add(e1);
+        points.clear();
     }
 
     @Override
@@ -83,7 +228,8 @@ public class Main extends GridPanel {
         super.clearGrid();
         polygons.clear();
         points.clear();
-        centered = false;
+        if (centerAllowed)
+            centered = false;
     }
 
     private void drawLine(Cell p1, Cell p2) {
@@ -158,7 +304,10 @@ public class Main extends GridPanel {
     }
 
     private void plot(int x, int y) {
-        getGrid()[getCenterX() + x][getCenterY() - y].setColor(Color.RED);
+        int length = getGrid().length;
+        int xAxis = (getCenterX() + x + length) % length;
+        int yAxis = (getCenterY() - y + length) % length;
+        getGrid()[xAxis][yAxis].setColor(Color.RED);
     }
 
     /**
@@ -245,31 +394,15 @@ public class Main extends GridPanel {
         absDy = Math.abs(dy);
         if (dy > 0) {
             if (dx > 0) {
-                if (absDx > absDy) { // 1
-                    oct = 1;
-                } else { // 2
-                    oct = 2;
-                }
+                oct = absDx > absDy ? 1 : 2;
             } else if (dx < 0) {
-                if (absDx < absDy) { // 3
-                    oct = 3;
-                } else { // 4
-                    oct = 4;
-                }
+                oct = absDx < absDy ? 3 : 4;
             }
         } else if (dy < 0) {
             if (dx < 0) {
-                if (absDx > absDy) { // 5
-                    oct = 5;
-                } else { // 6
-                    oct = 6;
-                }
+                oct = absDx > absDy ? 5 : 6;
             } else if (dx > 0) {
-                if (absDx < absDy) { // 7
-                    oct = 7;
-                } else { // 8
-                    oct = 8;
-                }
+                oct = absDx < absDy ? 7 : 8;
             }
         }
         return oct;
