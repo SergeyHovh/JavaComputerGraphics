@@ -1,10 +1,10 @@
-package com.company;
+package com.company.Project_1;
 
 import static java.lang.Math.*;
 
-public class Transformations2D {
+class Transformations2D {
 
-    public static double[][] matrixMultiplication(double[][] A, double[][] B) {
+    static double[][] matrixMultiplication(double[][] A, double[][] B) {
         if (A[0].length != B.length) return null;
         int m = A.length;
         int n = A[0].length;
@@ -22,7 +22,7 @@ public class Transformations2D {
         return res;
     }
 
-    public static double[][] matrixTranspose(double[][] A) {
+    static double[][] matrixTranspose(double[][] A) {
         double[][] transposed = new double[A[0].length][A.length];
         int length = transposed.length;
         int height = transposed[0].length;
@@ -38,16 +38,18 @@ public class Transformations2D {
      * @param angle degrees
      * @return rotation matrix for given angle in degrees
      */
-    public static double[][] rotationMatrix(double angle) {
+    static double[][] rotationMatrix(double angle) {
         double rad = toRadians(angle);
+        double cos = cos(rad);
+        double sin = sin(rad);
         return new double[][]{
-                {cos(rad), -sin(rad), 0},
-                {sin(rad), cos(rad), 0},
+                {cos, -sin, 0},
+                {sin, cos, 0},
                 {0, 0, 1}
         };
     }
 
-    public static double[][] scaleMatrix(double x, double y) {
+    static double[][] scaleMatrix(double x, double y) {
         return new double[][]{
                 {x, 0, 0},
                 {0, y, 0},
@@ -55,7 +57,7 @@ public class Transformations2D {
         };
     }
 
-    public static double[][] translationMatrix(double x, double y) {
+    static double[][] translationMatrix(double x, double y) {
         return new double[][]{
                 {1, 0, x},
                 {0, 1, y},

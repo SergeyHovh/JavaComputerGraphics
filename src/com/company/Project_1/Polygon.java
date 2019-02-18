@@ -1,11 +1,13 @@
-package com.company;
+package com.company.Project_1;
+
+import com.company.base.Cell;
 
 import java.awt.*;
 import java.util.Vector;
 
-import static com.company.Transformations2D.*;
+import static com.company.Project_1.Transformations2D.*;
 
-public class Polygon {
+class Polygon {
     private Vector<Cell> polygonVertices;
     private boolean selected = false, complete = true;
     private int massX = 0, massY = 0;
@@ -24,34 +26,31 @@ public class Polygon {
         massY /= polygonVertices.size();
     }
 
-    public void select() {
+    void select() {
         selected = true;
         for (Cell polygonVertex : polygonVertices) {
             polygonVertex.setColor(Color.BLUE);
         }
     }
 
-    public void move(int x, int y) {
+    void move(int x, int y) {
         transformAboutPoint(translationMatrix(x, y), massX, massY);
         massX += x;
         massY += y;
     }
 
-    public void scale(int X, int Y, double scaleDiff) {
+    void scale(int X, int Y, double scaleDiff) {
         double scaleY = 1;
         double scaleX = 1;
-        if (X == 1) scaleX += scaleDiff;
-        if (X == -1) scaleX -= scaleDiff;
-        if (Y == 1) scaleY += scaleDiff;
-        if (Y == -1) scaleY -= scaleDiff;
-
+        scaleX += X * scaleDiff;
+        scaleY += Y * scaleDiff;
         double[][] scaleMatrix = scaleMatrix(scaleX, scaleY);
         transformAboutPoint(scaleMatrix, massX, massY);
     }
 
-    public void rotate(boolean clockwise) {
+    void rotate(boolean clockwise) {
         double[][] rotationMatrix;
-        int angle = 10;
+        int angle = 15;
         if (clockwise)
             rotationMatrix = rotationMatrix(angle);
         else
@@ -64,6 +63,7 @@ public class Polygon {
             double[][] directTranslation = translationMatrix(x, y);
             double[][] doubles = matrixMultiplication(directTranslation, transformation);
             double[][] reverseTranslation = translationMatrix(-x, -y);
+            assert doubles != null;
             double[][] resultingTransformation = matrixMultiplication(doubles, reverseTranslation);
             transform(resultingTransformation);
         } else {
@@ -79,6 +79,7 @@ public class Polygon {
                     {x, y, 1}
             });
             double[][] multiplication = matrixMultiplication(transformation, currentVector);
+            assert multiplication != null;
             int xPos = (int) Math.round(multiplication[0][0]);
             int yPos = (int) Math.round(multiplication[1][0]);
             polygonVertex.setxPos(xPos);
@@ -86,31 +87,31 @@ public class Polygon {
         }
     }
 
-    public Vector<Cell> getPolygonVertices() {
+    Vector<Cell> getPolygonVertices() {
         return polygonVertices;
     }
 
-    public boolean isSelected() {
+    boolean isSelected() {
         return selected;
     }
 
-    public void setSelected(boolean selected) {
+    void setSelected(boolean selected) {
         this.selected = selected;
     }
 
-    public boolean isComplete() {
+    boolean isComplete() {
         return complete;
     }
 
-    public void setComplete(boolean complete) {
+    void setComplete(boolean complete) {
         this.complete = complete;
     }
 
-    public int getMassX() {
+    int getMassX() {
         return massX;
     }
 
-    public int getMassY() {
+    int getMassY() {
         return massY;
     }
 }
