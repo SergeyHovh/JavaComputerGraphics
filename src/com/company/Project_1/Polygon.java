@@ -1,13 +1,16 @@
 package com.company.Project_1;
 
 import com.company.base.Cell;
+import com.company.util.Transformations2D;
 
 import java.awt.*;
 import java.util.Vector;
 
-import static com.company.Project_1.Transformations2D.*;
+import static com.company.util.MatrixOperations.matrixMultiplication;
+import static com.company.util.MatrixOperations.matrixTranspose;
+import static com.company.util.Transformations2D.translate;
 
-class Polygon {
+public class Polygon {
     private Vector<Cell> polygonVertices;
     private boolean selected = false, complete = true;
     private int massX = 0, massY = 0;
@@ -34,7 +37,7 @@ class Polygon {
     }
 
     void move(int x, int y) {
-        transformAboutPoint(translationMatrix(x, y), massX, massY);
+        transformAboutPoint(translate(x, y), massX, massY);
         massX += x;
         massY += y;
     }
@@ -44,7 +47,7 @@ class Polygon {
         double scaleX = 1;
         scaleX += X * scaleDiff;
         scaleY += Y * scaleDiff;
-        double[][] scaleMatrix = scaleMatrix(scaleX, scaleY);
+        double[][] scaleMatrix = Transformations2D.scale(scaleX, scaleY);
         transformAboutPoint(scaleMatrix, massX, massY);
     }
 
@@ -52,17 +55,17 @@ class Polygon {
         double[][] rotationMatrix;
         int angle = 15;
         if (clockwise)
-            rotationMatrix = rotationMatrix(angle);
+            rotationMatrix = Transformations2D.rotate(angle);
         else
-            rotationMatrix = rotationMatrix(-angle);
+            rotationMatrix = Transformations2D.rotate(-angle);
         transformAboutPoint(rotationMatrix, massX, massY);
     }
 
     private void transformAboutPoint(double[][] transformation, int x, int y) {
         if (x != 0 && y != 0) {
-            double[][] directTranslation = translationMatrix(x, y);
+            double[][] directTranslation = translate(x, y);
             double[][] doubles = matrixMultiplication(directTranslation, transformation);
-            double[][] reverseTranslation = translationMatrix(-x, -y);
+            double[][] reverseTranslation = translate(-x, -y);
             assert doubles != null;
             double[][] resultingTransformation = matrixMultiplication(doubles, reverseTranslation);
             transform(resultingTransformation);
@@ -87,7 +90,7 @@ class Polygon {
         }
     }
 
-    Vector<Cell> getPolygonVertices() {
+    public Vector<Cell> getPolygonVertices() {
         return polygonVertices;
     }
 
@@ -99,7 +102,7 @@ class Polygon {
         this.selected = selected;
     }
 
-    boolean isComplete() {
+    public boolean isComplete() {
         return complete;
     }
 
@@ -107,11 +110,11 @@ class Polygon {
         this.complete = complete;
     }
 
-    int getMassX() {
+    public int getMassX() {
         return massX;
     }
 
-    int getMassY() {
+    public int getMassY() {
         return massY;
     }
 }
