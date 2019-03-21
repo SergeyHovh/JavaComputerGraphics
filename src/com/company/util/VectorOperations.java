@@ -19,4 +19,15 @@ public class VectorOperations {
         V[2] = A[0] * B[1] - A[1] * B[0];
         return V;
     }
+
+    public static void normalize(double[] A) {
+        double size = 0;
+        for (double v : A) {
+            size += v * v;
+        }
+        double sqrt = Math.sqrt(size);
+        for (int i = 0; i < A.length; i++) {
+            A[i] /= sqrt;
+        }
+    }
 }
